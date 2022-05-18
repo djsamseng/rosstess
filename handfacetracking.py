@@ -147,6 +147,7 @@ def run():
 
             faces = mesh_results.multi_face_landmarks
             if len(faces) < len(tracking_faces):
+              # TODO: Implement
               # Lost a face, figure out which one we lost by looking at t-1 since faces don't move much from t-1 to t
               # tracking_faces[face_id].save()
               # del tracking_faces[face_id]
@@ -168,6 +169,7 @@ def run():
                   for tracked_face in tracking_faces:
                     if tracked_face.name == name:
                       # Already tracking someone with this name
+                      print("Already tracking with name:", name)
                       tracked_face.add_face_structure(face_structure=face_structure, save=False)
                       return
                   for known_face in known_faces:
@@ -175,16 +177,22 @@ def run():
                       # Restoring someone from the database
                       tracking_faces.append(known_face)
                       known_face.add_face_structure(face_structure=face_structure, save=False)
+                      print("Found someone from database:", name)
                       return
+                  new_face = TrackedFace(name=name, face_structures=np.array([face_structure]))
+                  tracking_faces.append(new_face)
+                  print("Created new face:", new_face.name)
                 handle_new_name(name)
 
             for face_id in range(len(faces)):
               face = faces[face_id]
               face_structure = get_face_structure(face=face)
-              # Guess who it is, if it's wrong (face_id != pred) then add it to the database
               query_structure = face_structure.reshape((-1,))
               distances, indices = tree.query(query_structure, k=1)
-              print(distances, labels[indices], "actual:", labels[face_id])
+
+              # TODO: Guess who it is, if it's wrong (face_id != pred) then add it to the database
+              # Threshold at 1 or 2 should work
+              print(distances, labels[indices], "actual:", tracking_faces[face_id].name)
 
               tracking_faces[face_id].add_face_structure(face_structure=face_structure, save=False)
 
